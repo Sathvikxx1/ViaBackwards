@@ -159,7 +159,7 @@ public interface ViaBackwardsPlatform {
     default void enable() {
         final ProtocolVersion protocolVersion = Via.getAPI().getServerVersion().highestSupportedProtocolVersion();
         if (protocolVersion.newerThanOrEqualTo(ProtocolVersion.v1_21_2)) {
-            Via.getPlatform().runRepeatingSync(new PlayerPacketsTickTask(), 1L);
+            Via.getPlatform().runRepeatingAsync(new PlayerPacketsTickTask(), 1L);
         }
 
         if (protocolVersion.newerThanOrEqualTo(ProtocolVersion.v1_21_6)) {
