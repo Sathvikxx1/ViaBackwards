@@ -26,6 +26,8 @@ import com.viaversion.viabackwards.protocol.v1_21_9to1_21_7.rewriter.BlockItemPa
 import com.viaversion.viabackwards.protocol.v1_21_9to1_21_7.rewriter.ComponentRewriter1_21_9;
 import com.viaversion.viabackwards.protocol.v1_21_9to1_21_7.rewriter.EntityPacketRewriter1_21_9;
 import com.viaversion.viabackwards.protocol.v1_21_9to1_21_7.rewriter.ParticleRewriter1_21_9;
+import com.viaversion.viabackwards.protocol.v1_21_9to1_21_7.rewriter.RegistryDataRewriter1_21_9;
+import com.viaversion.viabackwards.protocol.v1_21_9to1_21_7.storage.DimensionScaleStorage;
 import com.viaversion.viabackwards.protocol.v1_21_9to1_21_7.storage.PlayerRotationStorage;
 import com.viaversion.viabackwards.protocol.v1_21_9to1_21_7.tracker.EntityTracker1_21_9;
 import com.viaversion.viaversion.api.connection.UserConnection;
@@ -54,6 +56,7 @@ import com.viaversion.viaversion.protocols.v1_21_7to1_21_9.packet.ClientboundPac
 import com.viaversion.viaversion.protocols.v1_21_7to1_21_9.packet.ServerboundConfigurationPackets1_21_9;
 import com.viaversion.viaversion.protocols.v1_21_7to1_21_9.packet.ServerboundPacket1_21_9;
 import com.viaversion.viaversion.rewriter.ParticleRewriter;
+import com.viaversion.viaversion.rewriter.RegistryDataRewriter;
 import com.viaversion.viaversion.rewriter.StatisticsRewriter;
 import com.viaversion.viaversion.rewriter.TagRewriter;
 
@@ -67,6 +70,7 @@ public final class Protocol1_21_9To1_21_7 extends BackwardsProtocol<ClientboundP
     private final ParticleRewriter<ClientboundPacket1_21_9> particleRewriter = new ParticleRewriter1_21_9(this);
     private final NBTComponentRewriter<ClientboundPacket1_21_9> translatableRewriter = new ComponentRewriter1_21_9(this);
     private final TagRewriter<ClientboundPacket1_21_9> tagRewriter = new TagRewriter<>(this);
+    private final RegistryDataRewriter registryDataRewriter = new RegistryDataRewriter1_21_9(this);
 
     public Protocol1_21_9To1_21_7() {
         super(ClientboundPacket1_21_9.class, ClientboundPacket1_21_6.class, ServerboundPacket1_21_9.class, ServerboundPacket1_21_6.class);
@@ -75,6 +79,8 @@ public final class Protocol1_21_9To1_21_7 extends BackwardsProtocol<ClientboundP
     @Override
     protected void registerPackets() {
         super.registerPackets();
+
+        registerClientbound(ClientboundConfigurationPackets1_21_9.REGISTRY_DATA, registryDataRewriter::handle);
 
         tagRewriter.registerGeneric(ClientboundPackets1_21_9.UPDATE_TAGS);
         tagRewriter.registerGeneric(ClientboundConfigurationPackets1_21_9.UPDATE_TAGS);
@@ -185,12 +191,19 @@ public final class Protocol1_21_9To1_21_7 extends BackwardsProtocol<ClientboundP
             }
         });
 
+        registerServerbound(ServerboundPackets1_21_6.DEBUG_SAMPLE_SUBSCRIPTION, wrapper -> {
+            final int sampleType = wrapper.read(Types.VAR_INT);
+            if (sampleType == 0) { // TICK_TIME
+                wrapper.write(Types.VAR_INT, 1); // Subscription count
+                wrapper.write(Types.VAR_INT, 0); // Subscription registry id (DEDICATED_SERVER_TICK_TIME)
+            }
+        });
+
         cancelClientbound(ClientboundPackets1_21_9.DEBUG_BLOCK_VALUE);
         cancelClientbound(ClientboundPackets1_21_9.DEBUG_CHUNK_VALUE);
         cancelClientbound(ClientboundPackets1_21_9.DEBUG_ENTITY_VALUE);
         cancelClientbound(ClientboundPackets1_21_9.DEBUG_EVENT);
         cancelClientbound(ClientboundPackets1_21_9.GAME_EVENT_TEST_HIGHLIGHT_POS);
-        cancelServerbound(ServerboundPackets1_21_6.DEBUG_SAMPLE_SUBSCRIPTION);
     }
 
     @Override
@@ -198,6 +211,7 @@ public final class Protocol1_21_9To1_21_7 extends BackwardsProtocol<ClientboundP
         addEntityTracker(connection, new EntityTracker1_21_9(connection, EntityTypes1_21_9.PLAYER));
         addItemHasher(connection, new ItemHasherBase(this, connection));
         connection.put(new PlayerRotationStorage());
+        connection.put(new DimensionScaleStorage());
     }
 
     @Override
@@ -213,6 +227,11 @@ public final class Protocol1_21_9To1_21_7 extends BackwardsProtocol<ClientboundP
     @Override
     public BlockItemPacketRewriter1_21_9 getItemRewriter() {
         return itemRewriter;
+    }
+
+    @Override
+    public RegistryDataRewriter getRegistryDataRewriter() {
+        return registryDataRewriter;
     }
 
     @Override

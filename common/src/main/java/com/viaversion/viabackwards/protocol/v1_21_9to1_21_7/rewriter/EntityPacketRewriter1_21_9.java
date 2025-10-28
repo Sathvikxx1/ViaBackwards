@@ -20,7 +20,6 @@ package com.viaversion.viabackwards.protocol.v1_21_9to1_21_7.rewriter;
 import com.viaversion.nbt.tag.CompoundTag;
 import com.viaversion.nbt.tag.StringTag;
 import com.viaversion.nbt.tag.Tag;
-import com.viaversion.viabackwards.api.rewriters.BackwardsRegistryRewriter;
 import com.viaversion.viabackwards.api.rewriters.EntityRewriter;
 import com.viaversion.viabackwards.protocol.v1_21_9to1_21_7.Protocol1_21_9To1_21_7;
 import com.viaversion.viabackwards.protocol.v1_21_9to1_21_7.storage.MannequinData;
@@ -40,10 +39,8 @@ import com.viaversion.viaversion.api.type.Types;
 import com.viaversion.viaversion.api.type.types.version.VersionedTypes;
 import com.viaversion.viaversion.protocols.v1_21_5to1_21_6.packet.ClientboundPackets1_21_6;
 import com.viaversion.viaversion.protocols.v1_21_5to1_21_6.packet.ServerboundPackets1_21_6;
-import com.viaversion.viaversion.protocols.v1_21_7to1_21_9.packet.ClientboundConfigurationPackets1_21_9;
 import com.viaversion.viaversion.protocols.v1_21_7to1_21_9.packet.ClientboundPacket1_21_9;
 import com.viaversion.viaversion.protocols.v1_21_7to1_21_9.packet.ClientboundPackets1_21_9;
-import com.viaversion.viaversion.rewriter.RegistryDataRewriter;
 import com.viaversion.viaversion.rewriter.entitydata.EntityDataHandler;
 import com.viaversion.viaversion.util.ChatColorUtil;
 import java.util.BitSet;
@@ -126,9 +123,6 @@ public final class EntityPacketRewriter1_21_9 extends EntityRewriter<Clientbound
             wrapper.passthrough(Types.FLOAT); // Yaw
             wrapper.read(Types.FLOAT); // Pitch
         });
-
-        final RegistryDataRewriter registryDataRewriter = new BackwardsRegistryRewriter(protocol);
-        protocol.registerClientbound(ClientboundConfigurationPackets1_21_9.REGISTRY_DATA, registryDataRewriter::handle);
 
         protocol.registerServerbound(ServerboundPackets1_21_6.MOVE_PLAYER_POS_ROT, wrapper -> {
             wrapper.passthrough(Types.DOUBLE); // X
